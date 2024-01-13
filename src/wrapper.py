@@ -25,30 +25,30 @@ def getLegislators(id: str):
 # cid: 	(required) CRP CandidateID
 # year: 	2013, 2014, 2015 and 2016 data provided where available
 def memPFDprofile(cid: str, year=None):
-    result = api_call("memPFDprofile", kwargs)
+    result = api_call("memPFDprofile", {"cid": cid, "year": year})
 
     return result
 
 # cid: 	(required) CRP CandidateID
 # cycle: 	2012, 2014, 2016, 2018, 2020, 2022; leave blank for latest cycle
-def candSummary(**kwargs):
-    result = api_call("candSummary", kwargs)
+def candSummary(cid: str, cycle=None):
+    result = api_call("candSummary", {"cid": cid, "cycle": cycle})
 
     return result
 
 # cid: 	(required) CRP CandidateID
 # cycle: 	(optional) 2012, 2014, 2016, 2018, 2020, 2022 
 # (blank or out of range cycle will return most recent cycle)
-def candContrib(**kwargs):
-    result = api_call("candContrib", kwargs)
+def candContrib(cid: str, cycle=None):
+    result = api_call("candContrib", {"cid": cid, "cycle": cycle})
 
     return result
 
 # cid: 	(required) CRP CandidateID
 # cycle: 	(optional) 2012, 2014, 2016, 2018, 2020, 2022 
 # (blank or out of range cycle will return most recent cycle)
-def candIndustry(**kwargs):
-    result = api_call("candIndustry", kwargs)
+def candIndustry(cid: str, cycle=None):
+    result = api_call("candIndustry", {"cid": cid, "cycle": cycle})
 
     return result
 
@@ -56,16 +56,20 @@ def candIndustry(**kwargs):
 # cycle: 	(optional) 2012, 2014, 2016, 2018, 2020, 2022 
 # (blank or out of range cycle will return most recent cycle)
 # ind: 	(required) a 3-character industry code
-def candIndByInd(**kwargs):
-    result = api_call("candIndByInd", kwargs)
+def candIndByInd(cid: str, industry: str, cycle=None):
+    result = api_call("candIndByInd", {
+        "cid": cid, 
+        "ind": industry, 
+        "cycle": cycle
+    })
 
     return result
 
 # cid: 	(required) CRP CandidateID
 # cycle: 	(optional) 2012, 2014, 2016, 2018, 2020, 2022 
 # (blank or out of range cycle will return most recent cycle)
-def candSector(**kwargs):
-    result = api_call("candSector", kwargs)
+def candSector(cid: str, cycle=None):
+    result = api_call("candSector", {"cid": cid, "cycle": cycle})
 
     return result
 
@@ -74,26 +78,30 @@ def candSector(**kwargs):
 # 114 (uses 2016 data), 115 (uses 2018 data), 116 (uses 2020 data); 
 # leave blank for latest congress
 # indus: 	(required) Industry code
-def congCommiteeIndustry(**kwargs):
-    result = api_call("congCmteIndus", kwargs)
+def congCommiteeIndustry(committee: str, industry: str, congnum=None):
+    result = api_call("congCmteIndus", {
+        "cmte": committee,
+        "congno": congnum,
+        "indus": industry
+    })
 
     return result
 
 # org: 	(required) name or partial name of organization requested
-def getOrgs(**kwargs):
-    result = api_call("getOrgs", kwargs)
+def getOrgs(org: str):
+    result = api_call("getOrgs", {"org": org})
 
     return result
 
 # id: 	(required) CRP orgid (available via getOrgID method)
-def orgSummary(**kwargs):
-    result = api_call("orgSummary", kwargs)
+def orgSummary(id: str):
+    result = api_call("orgSummary", {"id": id})
 
     return result
 
 #No parameters
-def independentExpend(id: str):
-    result = api_call("independentExpend", {"id": id})
+def independentExpend():
+    result = api_call("independentExpend", {})
 
     return result
 
