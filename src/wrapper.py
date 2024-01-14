@@ -2,7 +2,6 @@
 #And I want it more functional
 import requests
 import urllib
-import json
 from pprint import pprint
 
 def api_call(key: str, method_name: str, params: dict) -> dict:
@@ -110,16 +109,16 @@ def independentExpend(key: str) -> dict:
 
     return result["response"]["indexp"]
 
-# Probably pretty wasteful of API
+# # Probably pretty wasteful of API
 # def test_functions(key: str):
-    # pprint(getLegislators(key, id="NJ04"))
-    # pprint(memPFDprofile(key, cid="N00007360"))
-    # pprint(candSummary(key, cid="N00007360"))
-    # pprint(candContrib(key, cid="N00007360"))
-    # pprint(candIndustry(key, cid="N00007360"))
-    # pprint(candIndByInd(key, cid="N00007360", industry="K02"))
-    # pprint(candSector(key, cid="N00007360"))
-    # pprint(congCommiteeIndustry(key, industry="F10", committee="HARM"))
-    # pprint(getOrgs(key, org="Goldman"))
-    # pprint(orgSummary(key, id="D000000125"))
-    # pprint(independentExpend(key))
+#     # pprint(getLegislators(key, id="NJ04"))
+#     # pprint(memPFDprofile(key, cid="N00007360"))
+#     # pprint(candSummary(key, cid="N00007360"))
+#     # pprint(candContrib(key, cid="N00007360"))
+#     # pprint(candIndustry(key, cid="N00007360"))
+#     # pprint(candIndByInd(key, cid="N00007360", industry="K02"))
+#     # pprint(candSector(key, cid="N00007360"))
+#     # pprint(congCommiteeIndustry(key, industry="F10", committee="HARM"))
+#     # pprint(getOrgs(key, org="Goldman"))
+#     # pprint(orgSummary(key, id="D000000125"))
+#     # pprint(independentExpend(key))
