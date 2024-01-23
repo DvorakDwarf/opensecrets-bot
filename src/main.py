@@ -104,8 +104,3 @@ client = tweepy.Client(
     access_token= TWITTER_TOKEN,
     access_token_secret= TWITTER_SECRET_TOKEN)
 
-try:
-    client.update_status('Hello, world!')
-    print('Tweet successfully sent!')
-except Exception as e:
-    print('Error:', e)
