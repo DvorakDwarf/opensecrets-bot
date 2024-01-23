@@ -1,6 +1,18 @@
 #For some reason I get different numbers when looking at lobbying amounts
 #The website top receipients list gives about double the amount per candidate
 
+#TODO
+#Make it save which candidates were already talked about and then retry
+#Refer to senators as senators, etc
+#Make sure tweet is under 280
+#   Reduce size of message + equivalents
+#   Check if len > 280 then retry if it still is after shortening
+#Automatic tweeting every x hour each day
+#README
+#Use tolerance_limit
+#Figure out where to host
+#Annonce ?
+
 import os
 from dotenv import load_dotenv
 import wrapper
@@ -9,6 +21,7 @@ import pandas as pd
 import random
 from pprint import pprint
 
+#Why twitter gotta have like 5 secrets to post a tweet, smh
 load_dotenv()
 API_KEY = os.environ.get("API_KEY")
 TWITTER_KEY = os.environ.get("TWITTER_KEY")
@@ -102,5 +115,8 @@ client = tweepy.Client(
     consumer_key= TWITTER_KEY,
     consumer_secret= TWITTER_SECRET_KEY,
     access_token= TWITTER_TOKEN,
-    access_token_secret= TWITTER_SECRET_TOKEN)
+    access_token_secret= TWITTER_SECRET_TOKEN
+)
 
+print(client.get_me())
+# client.create_tweet(text="First time I am getting this to work I think everything is fine maybe")
