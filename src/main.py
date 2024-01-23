@@ -42,8 +42,7 @@ TOLERANCE_LIMIT = 20000 #Anything lower than this isn't fun to display
 def getRandomLegislator():
     state_code = random.choice(STATE_CODES)
     legislators = wrapper.getLegislators(API_KEY, id=state_code)
-    # picked_legislator = random.choice(legislators)["@attributes"]
-    picked_legislator = legislators["@attributes"]
+    picked_legislator = random.choice(legislators)["@attributes"]
 
     return picked_legislator
 
