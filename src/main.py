@@ -4,11 +4,18 @@
 import os
 from dotenv import load_dotenv
 import wrapper
+import tweepy
+import pandas as pd
 import random
 from pprint import pprint
 
 load_dotenv()
 API_KEY = os.environ.get("API_KEY")
+TWITTER_KEY = os.environ.get("TWITTER_KEY")
+TWITTER_SECRET_KEY = os.environ.get("TWITTER_SECRET_KEY")
+TWITTER_TOKEN = os.environ.get("TWITTER_TOKEN")
+TWITTER_SECRET_TOKEN = os.environ.get("TWITTER_SECRET_TOKEN")
+BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
 
 STATE_CODES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
                "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
@@ -51,7 +58,7 @@ def getRandomEquivalent(n: int) -> list:
 
     return equivalents
 
-def writeMessage(legislator, report):
+def writeMessage(legislator, report) -> str:
     message = (f"According to {report['origin']}, legislator {legislator['firstlast']} " 
                 f"has received {report['total']}$ for their campaign from "
                 f"lobbyists in the {report['cycle']} cycle equivalent to:\n"
@@ -64,15 +71,41 @@ def writeMessage(legislator, report):
     print(message)
     print(len(message))
 
+    return message
 
-legislator = getRandomLegislator()
-report = wrapper.candIndByInd(
-            API_KEY, 
-            legislator["cid"], 
-            industry="K02"
-        )["@attributes"]
 
-# pprint(report)
-# pprint(legislator)
+# legislator = getRandomLegislator()
+# report = wrapper.candIndByInd(
+#             API_KEY, 
+#             legislator["cid"], 
+#             industry="K02"
+#         )["@attributes"]
 
-writeMessage(legislator, report)
+# # pprint(report)
+# # pprint(legislator)
+
+# message = writeMessage(legislator, report)
+
+auth = tweepy.OAuthHandler(TWITTER_KEY, TWITTER_SECRET_KEY)
+auth.set_access_token(TWITTER_TOKEN, TWITTER_SECRET_TOKEN)
+
+api = tweepy.API(auth, wait_on_rate_limit=True)
+
+try:
+    api.verify_credentials()
+    print("Authentication OK")
+except:
+    print("Error during authentication")
+
+
+client = tweepy.Client(
+    consumer_key= TWITTER_KEY,
+    consumer_secret= TWITTER_SECRET_KEY,
+    access_token= TWITTER_TOKEN,
+    access_token_secret= TWITTER_SECRET_TOKEN)
+
+try:
+    client.update_status('Hello, world!')
+    print('Tweet successfully sent!')
+except Exception as e:
+    print('Error:', e)
