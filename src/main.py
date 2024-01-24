@@ -2,11 +2,11 @@
 #The website top receipients list gives about double the amount per candidate
 
 #TODO
-#Make it save which candidates were already talked about and then retry 
+#Make it save which candidates were already talked about and then retry XXX
 #Refer to senators as senators, etc XXX
 #Make sure tweet is under 280 XXX
-#   Reduce size of message + equivalents
-#   Check if len > 280 then retry if it still is after shortening
+#   Reduce size of message + equivalents XXX
+#   Check if len > 280 then retry if it still is after shortening XXX
 #Automatic tweeting every x hour each day
 #README
 #Use tolerance_limit XXX
@@ -19,7 +19,7 @@ import os
 from dotenv import load_dotenv
 import wrapper
 import tweepy
-import pandas as pd
+import json
 import random
 from pprint import pprint
 
@@ -33,7 +33,7 @@ TWITTER_SECRET_TOKEN = os.environ.get("TWITTER_SECRET_TOKEN")
 # BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
 
 TWITTER_CHARACTER_LIMIT = 280
-TOLERANCE_LIMIT = 20000 #Anything lower than this isn't fun to display
+TOLERANCE_LIMIT = 50000 #Anything lower than this isn't fun to display
 STATE_CODES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
                "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
                "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
@@ -61,7 +61,7 @@ MEASURING_UNITS = {"GTX 4090": 1599,
                    "months of LA rent": 3258,
                    }
 
-def getRandomLegislator() -> (object, object):
+def getRandomLegislator(blacklist=None) -> (object, object):
     state_code = random.choice(STATE_CODES)
     legislators = wrapper.getLegislators(API_KEY, id=state_code)
     picked_legislator = random.choice(legislators)["@attributes"]
@@ -72,9 +72,14 @@ def getRandomLegislator() -> (object, object):
             picked_legislator["cid"], 
             industry="K02")["@attributes"]
     except:
-        print("Lobbying request denied, retrying")
+        print("LOBBYING REQUEST NOT FOUND, RETRYING")
         return getRandomLegislator()
     
+    #Check if candidate already picked before
+    if (blacklist != None) and (picked_legislator["cid"] in blacklist):
+        print("CANDIDATE IN BLACKLIST, RETRYING")
+        return getRandomLegislator()
+
     if int(report["total"]) < TOLERANCE_LIMIT:
         print(f"{report['total']}$ IS TOO LOW, RETRYING")
         picked_legislator, report = getRandomLegislator()
@@ -92,14 +97,15 @@ def writeMessage(legislator, report) -> str:
         case "H": title = "representative "
         case "S": title = "senator "
 
-    message = (f"According to {report['origin']}, {title}{legislator['firstlast']} " 
-                f"received {report['total']}$ for their campaign from "
-                f"lobbyists in the {report['cycle']} cycle equivalent to:\n"
+    message = (
+        f"According to {report['origin']}, {title}{legislator['firstlast']} " 
+        f"received {report['total']:,}$ for their campaign from "
+        f"lobbyists in the {report['cycle']} cycle equivalent to:\n"
     )
 
     equivalents = getRandomEquivalent(5)    
     for item in equivalents:
-        message += f"{float(report['total']) / item[1]:,.2f} {item[0]}\n"
+        message += f"• {float(report['total']) / item[1]:,.2f} {item[0]}\n"
 
     if len(message) > TWITTER_CHARACTER_LIMIT:
         print("TOO LONG, RETRYING")
@@ -107,11 +113,21 @@ def writeMessage(legislator, report) -> str:
 
     return message
 
-legislator, report = getRandomLegislator()
+try:
+    with open("blacklist.json", "r") as file:
+        blacklist = json.load(file)["list"]
+        print(type(blacklist))
+        print(blacklist)
+except IOError:
+    with open("blacklist.json", "w") as file:
+        json.dump({"list": []}, file)
+        blacklist = []
+
+legislator, report = getRandomLegislator(blacklist)
 message = writeMessage(legislator, report)
 
-pprint(report)
 pprint(legislator)
+pprint(report)
 pprint(message)
 
 auth = tweepy.OAuthHandler(TWITTER_KEY, TWITTER_SECRET_KEY)
@@ -125,4 +141,9 @@ client = tweepy.Client(
 )
 
 print(client.get_me())
-# client.create_tweet(text="First time I am getting this to work I think everything is fine maybe")
+client.create_tweet(text=message)
+
+#Save blacklist
+blacklist.append(legislator["cid"])
+with open("blacklist.json", "w") as file:
+    json.dump({"list": blacklist}, file, indent=4)
