@@ -4,14 +4,15 @@
 #TODO
 #Make it save which candidates were already talked about and then retry
 #Refer to senators as senators, etc
-#Make sure tweet is under 280
+#Make sure tweet is under 280 XXX
 #   Reduce size of message + equivalents
 #   Check if len > 280 then retry if it still is after shortening
 #Automatic tweeting every x hour each day
 #README
-#Use tolerance_limit
+#Use tolerance_limit XXX
 #Figure out where to host
 #Annonce ?
+#Entertainment purposes pinned tweet
 
 import os
 from dotenv import load_dotenv
@@ -28,8 +29,10 @@ TWITTER_KEY = os.environ.get("TWITTER_KEY")
 TWITTER_SECRET_KEY = os.environ.get("TWITTER_SECRET_KEY")
 TWITTER_TOKEN = os.environ.get("TWITTER_TOKEN")
 TWITTER_SECRET_TOKEN = os.environ.get("TWITTER_SECRET_TOKEN")
-BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
+# BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
 
+TWITTER_CHARACTER_LIMIT = 280
+TOLERANCE_LIMIT = 20000 #Anything lower than this isn't fun to display
 STATE_CODES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
                "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
                "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
@@ -40,12 +43,12 @@ MEASURING_UNITS = {"GTX 4090": 1599,
                    "months of food": 415.53,
                    "AAA games": 60,
                    "student debters": 28950,
-                   "cheeseburgers": 2.55,
-                   "warhammer miniatures": 9.29,
+                   "burgers": 2.55,
+                   "warhammer minis": 9.29,
                    "yachts": 200000,
                    "grams of gold": 65,
                    "PS5s": 500,
-                   "russian citizen monthly salaries": 1130,
+                   "russian monthly salaries": 1130,
                    "ambulance rides": 1277,
                    "monopoly money": 0.000857993496409,
                    "Clash Royale gems": 0.808080808081,
@@ -54,17 +57,24 @@ MEASURING_UNITS = {"GTX 4090": 1599,
                    "pepsi logos": 1000000,
                    "sacs of potatoes": 68.84,
                    "months of Hustler's University": 49,
+                   "months of LA rent": 3258,
                    }
 
-TWITTER_CHARACTER_LIMIT = 280
-TOLERANCE_LIMIT = 20000 #Anything lower than this isn't fun to display
-
-def getRandomLegislator():
+def getRandomLegislator() -> (object, object):
     state_code = random.choice(STATE_CODES)
     legislators = wrapper.getLegislators(API_KEY, id=state_code)
     picked_legislator = random.choice(legislators)["@attributes"]
 
-    return picked_legislator
+    report = wrapper.candIndByInd(
+        API_KEY, 
+        picked_legislator["cid"], 
+        industry="K02")["@attributes"]
+    
+    if int(report["total"]) < TOLERANCE_LIMIT:
+        print(f"{report['total']}$ IS TOO LOW, RETRYING")
+        picked_legislator, report = getRandomLegislator()
+
+    return (picked_legislator, report)
 
 def getRandomEquivalent(n: int) -> list:
     equivalents = random.sample(list(MEASURING_UNITS.items()), n)
@@ -73,7 +83,7 @@ def getRandomEquivalent(n: int) -> list:
 
 def writeMessage(legislator, report) -> str:
     message = (f"According to {report['origin']}, legislator {legislator['firstlast']} " 
-                f"has received {report['total']}$ for their campaign from "
+                f"received {report['total']}$ for their campaign from "
                 f"lobbyists in the {report['cycle']} cycle equivalent to:\n"
     )
 
@@ -81,35 +91,23 @@ def writeMessage(legislator, report) -> str:
     for item in equivalents:
         message += f"{round(float(report['total']) / item[1], 2)} {item[0]}\n"
 
-    print(message)
-    print(len(message))
+    length = len(message)
+    print(length)
+    if length > TWITTER_CHARACTER_LIMIT:
+        print("TOO LONG, RETRYING")
+        message = writeMessage(legislator, report)
 
     return message
 
+legislator, report = getRandomLegislator()
+message = writeMessage(legislator, report)
 
-# legislator = getRandomLegislator()
-# report = wrapper.candIndByInd(
-#             API_KEY, 
-#             legislator["cid"], 
-#             industry="K02"
-#         )["@attributes"]
-
-# # pprint(report)
-# # pprint(legislator)
-
-# message = writeMessage(legislator, report)
+pprint(report)
+pprint(legislator)
+pprint(message)
 
 auth = tweepy.OAuthHandler(TWITTER_KEY, TWITTER_SECRET_KEY)
 auth.set_access_token(TWITTER_TOKEN, TWITTER_SECRET_TOKEN)
-
-api = tweepy.API(auth, wait_on_rate_limit=True)
-
-try:
-    api.verify_credentials()
-    print("Authentication OK")
-except:
-    print("Error during authentication")
-
 
 client = tweepy.Client(
     consumer_key= TWITTER_KEY,
