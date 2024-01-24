@@ -10,12 +10,13 @@
 #Automatic tweeting every x hour each day
 #README
 #Use tolerance_limit XXX
-#Figure out where to host
+#Figure out where to host XXX
 #Annonce ?
-#Entertainment purposes pinned tweet
+#Entertainment purposes pinned tweet XXX
 #pretty numbers with commas XXX
 
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 import wrapper
 import tweepy
@@ -141,9 +142,13 @@ client = tweepy.Client(
 )
 
 print(client.get_me())
-# client.create_tweet(text=message)
+client.create_tweet(text=message)
 
 #Save blacklist
 blacklist.append(legislator["cid"])
 with open("blacklist.json", "w") as file:
     json.dump({"list": blacklist}, file, indent=4)
+
+now = datetime.now()
+current_hour = now.strftime("%H") 
+print("Current hour =", current_hour)
