@@ -82,6 +82,7 @@ def getRandomEquivalent(n: int) -> list:
     return equivalents
 
 def writeMessage(legislator, report) -> str:
+    
     message = (f"According to {report['origin']}, legislator {legislator['firstlast']} " 
                 f"received {report['total']}$ for their campaign from "
                 f"lobbyists in the {report['cycle']} cycle equivalent to:\n"
