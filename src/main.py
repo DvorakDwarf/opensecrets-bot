@@ -141,7 +141,7 @@ client = tweepy.Client(
 )
 
 print(client.get_me())
-client.create_tweet(text=message)
+# client.create_tweet(text=message)
 
 #Save blacklist
 blacklist.append(legislator["cid"])
