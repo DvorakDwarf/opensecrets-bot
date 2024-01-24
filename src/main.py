@@ -2,8 +2,8 @@
 #The website top receipients list gives about double the amount per candidate
 
 #TODO
-#Make it save which candidates were already talked about and then retry
-#Refer to senators as senators, etc
+#Make it save which candidates were already talked about and then retry 
+#Refer to senators as senators, etc XXX
 #Make sure tweet is under 280 XXX
 #   Reduce size of message + equivalents
 #   Check if len > 280 then retry if it still is after shortening
@@ -13,6 +13,7 @@
 #Figure out where to host
 #Annonce ?
 #Entertainment purposes pinned tweet
+#pretty numbers with commas XXX
 
 import os
 from dotenv import load_dotenv
@@ -65,10 +66,14 @@ def getRandomLegislator() -> (object, object):
     legislators = wrapper.getLegislators(API_KEY, id=state_code)
     picked_legislator = random.choice(legislators)["@attributes"]
 
-    report = wrapper.candIndByInd(
-        API_KEY, 
-        picked_legislator["cid"], 
-        industry="K02")["@attributes"]
+    try:            
+        report = wrapper.candIndByInd(
+            API_KEY, 
+            picked_legislator["cid"], 
+            industry="K02")["@attributes"]
+    except:
+        print("Lobbying request denied, retrying")
+        return getRandomLegislator()
     
     if int(report["total"]) < TOLERANCE_LIMIT:
         print(f"{report['total']}$ IS TOO LOW, RETRYING")
@@ -82,19 +87,21 @@ def getRandomEquivalent(n: int) -> list:
     return equivalents
 
 def writeMessage(legislator, report) -> str:
-    
-    message = (f"According to {report['origin']}, legislator {legislator['firstlast']} " 
+    title = ""
+    match report["chamber"]:
+        case "H": title = "representative "
+        case "S": title = "senator "
+
+    message = (f"According to {report['origin']}, {title}{legislator['firstlast']} " 
                 f"received {report['total']}$ for their campaign from "
                 f"lobbyists in the {report['cycle']} cycle equivalent to:\n"
     )
 
     equivalents = getRandomEquivalent(5)    
     for item in equivalents:
-        message += f"{round(float(report['total']) / item[1], 2)} {item[0]}\n"
+        message += f"{float(report['total']) / item[1]:,.2f} {item[0]}\n"
 
-    length = len(message)
-    print(length)
-    if length > TWITTER_CHARACTER_LIMIT:
+    if len(message) > TWITTER_CHARACTER_LIMIT:
         print("TOO LONG, RETRYING")
         message = writeMessage(legislator, report)
 
