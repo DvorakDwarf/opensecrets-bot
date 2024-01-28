@@ -7,7 +7,7 @@
 #Make sure tweet is under 280 XXX
 #   Reduce size of message + equivalents XXX
 #   Check if len > 280 then retry if it still is after shortening XXX
-#Automatic tweeting every x hour each day
+#Automatic tweeting every x hour each day XXX
 #README
 #Use tolerance_limit XXX
 #Figure out where to host XXX
@@ -16,13 +16,15 @@
 #pretty numbers with commas XXX
 
 import os
-from datetime import datetime
-from dotenv import load_dotenv
-import wrapper
-import tweepy
+import time
 import json
 import random
+import tweepy
+from datetime import datetime
 from pprint import pprint
+from dotenv import load_dotenv
+
+import wrapper
 
 #Why twitter gotta have like 5 secrets to post a tweet, smh
 load_dotenv()
@@ -34,7 +36,8 @@ TWITTER_SECRET_TOKEN = os.environ.get("TWITTER_SECRET_TOKEN")
 # BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
 
 TWITTER_CHARACTER_LIMIT = 280
-TOLERANCE_LIMIT = 50000 #Anything lower than this isn't fun to display
+POST_HOUR = 7
+TOLERANCE_LIMIT = 1 #Anything lower than this isn't fun to display
 STATE_CODES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
                "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
                "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
@@ -100,7 +103,7 @@ def writeMessage(legislator, report) -> str:
 
     message = (
         f"According to {report['origin']}, {title}{legislator['firstlast']} " 
-        f"received {report['total']:,}$ for their campaign from "
+        f"received {int(report['total']):,}$ for their campaign from "
         f"lobbyists in the {report['cycle']} cycle equivalent to:\n"
     )
 
@@ -114,6 +117,21 @@ def writeMessage(legislator, report) -> str:
 
     return message
 
+def tweet(client, blacklist):
+    legislator, report = getRandomLegislator(blacklist)
+    message = writeMessage(legislator, report)
+
+    pprint(legislator)
+    pprint(report)
+    pprint(message)
+
+    client.create_tweet(text=message)
+
+    #Save blacklist
+    blacklist.append(legislator["cid"])
+    with open("blacklist.json", "w") as file:
+        json.dump({"list": blacklist}, file, indent=4)
+
 try:
     with open("blacklist.json", "r") as file:
         blacklist = json.load(file)["list"]
@@ -123,13 +141,6 @@ except IOError:
     with open("blacklist.json", "w") as file:
         json.dump({"list": []}, file)
         blacklist = []
-
-legislator, report = getRandomLegislator(blacklist)
-message = writeMessage(legislator, report)
-
-pprint(legislator)
-pprint(report)
-pprint(message)
 
 auth = tweepy.OAuthHandler(TWITTER_KEY, TWITTER_SECRET_KEY)
 auth.set_access_token(TWITTER_TOKEN, TWITTER_SECRET_TOKEN)
@@ -142,13 +153,22 @@ client = tweepy.Client(
 )
 
 print(client.get_me())
-client.create_tweet(text=message)
 
-#Save blacklist
-blacklist.append(legislator["cid"])
-with open("blacklist.json", "w") as file:
-    json.dump({"list": blacklist}, file, indent=4)
+already_posted = False
+while True:
+    print(already_posted)
 
-now = datetime.now()
-current_hour = now.strftime("%H") 
-print("Current hour =", current_hour)
+    now = datetime.now()
+    current_hour = now.strftime("%H") 
+    print("Current hour =", current_hour)
+
+    if int(current_hour) == POST_HOUR:
+        if already_posted == False:
+            tweet(client, blacklist)
+            already_posted = True
+    else:
+        already_posted = False
+
+    time.sleep(300)
+
+
